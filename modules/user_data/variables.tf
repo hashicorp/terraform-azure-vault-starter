@@ -26,11 +26,6 @@ variable "resource_group" {
   })
 }
 
-variable "resource_name_prefix" {
-  description = "Prefix applied to resource names"
-  type        = string
-}
-
 variable "subscription_id" {
   description = "Azure Subscription ID"
   type        = string
