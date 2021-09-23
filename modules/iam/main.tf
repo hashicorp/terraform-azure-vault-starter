@@ -1,5 +1,3 @@
-data "azurerm_subscription" "current" {}
-
 resource "azurerm_user_assigned_identity" "vault" {
   count = var.user_supplied_vm_identity_id != null ? 0 : 1
 
@@ -31,7 +29,7 @@ resource "azurerm_role_definition" "vault" {
   count = var.user_supplied_vm_identity_id != null ? 0 : 1
 
   name  = "${var.resource_name_prefix}-vault-server"
-  scope = data.azurerm_subscription.current.id
+  scope = var.resource_group.id
 
   assignable_scopes = [
     var.resource_group.id,
