@@ -73,6 +73,7 @@ resource "azurerm_key_vault_access_policy" "vault" {
 resource "azurerm_key_vault_certificate" "vault" {
   key_vault_id = azurerm_key_vault_access_policy.vault.key_vault_id
   name         = "${var.resource_name_prefix}-vault-cert"
+  tags         = var.common_tags
 
   certificate {
     contents = filebase64("certificate-to-import.pfx")
