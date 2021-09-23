@@ -276,6 +276,7 @@ resource "azurerm_bastion_host" "main" {
   location            = var.resource_group.location
   name                = "${var.resource_name_prefix}-vault-abs"
   resource_group_name = var.resource_group.name
+  tags                = var.common_tags
 
   ip_configuration {
     name                 = "${var.resource_name_prefix}-vault-abs"

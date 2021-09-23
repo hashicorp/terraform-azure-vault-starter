@@ -16,6 +16,10 @@ output "vault_network_security_group_name" {
 
 output "vault_subnet_id" {
   value = azurerm_subnet_network_security_group_association.vault.id
+
+  depends_on = [
+    azurerm_subnet_nat_gateway_association.vault,
+  ]
 }
 
 output "virtual_network_name" {
