@@ -6,7 +6,6 @@ locals {
       key_vault_name        = var.key_vault_name
       key_vault_secret_id   = var.key_vault_secret_id
       leader_tls_servername = var.leader_tls_servername
-      name                  = var.resource_name_prefix
       resource_group_name   = var.resource_group.name
       subscription_id       = var.subscription_id
       tenant_id             = var.tenant_id
