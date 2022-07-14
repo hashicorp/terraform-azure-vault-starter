@@ -1,3 +1,10 @@
+/**
+ * Copyright © 2014-2022 HashiCorp, Inc.
+ *
+ * This Source Code is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this project, you can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ */
+
 provider "azurerm" {
   features {}
 }
@@ -76,7 +83,7 @@ resource "azurerm_key_vault_certificate" "vault" {
   tags         = var.common_tags
 
   certificate {
-    contents = filebase64("certificate-to-import.pfx")
+    contents = tls_locally_signed_cert.server.cert_pfx
     password = ""
   }
 
@@ -102,5 +109,5 @@ resource "azurerm_key_vault_secret" "vault" {
   key_vault_id = azurerm_key_vault_access_policy.vault.key_vault_id
   name         = "${var.resource_name_prefix}-vault-vm-tls"
   tags         = var.common_tags
-  value        = filebase64("certificate-to-import.pfx")
+  value        = tls_locally_signed_cert.server.cert_pfx
 }

@@ -1,3 +1,14 @@
+/**
+ * Copyright © 2014-2022 HashiCorp, Inc.
+ *
+ * This Source Code is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this project, you can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ */
+
+output "lb_address_prefix" {
+  value = azurerm_subnet.vault_lb.address_prefixes[0]
+}
+
 output "lb_subnet_id" {
   value = azurerm_subnet_network_security_group_association.vault_lb.id
 }
