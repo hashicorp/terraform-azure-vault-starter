@@ -1,5 +1,7 @@
 ## Unreleased
 
+## 1.0.0 (July 15, 2022)
+
 BREAKING CHANGES:
 * Azurerm provider V3 is now required
 * Reduced deployment scope for the VM role definition to its Resource Group
@@ -25,9 +27,6 @@ FIXES:
 
 MISC:
 * Add `vm_scale_set_name` & `vault_version` module outputs
-
-## 0.1.1 (August 27, 2021)
-
 
 ## 0.1.0 (September 23, 2021)
 
