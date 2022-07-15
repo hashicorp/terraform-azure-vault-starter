@@ -6,9 +6,6 @@
 
 set -e -o pipefail
 
-export instance_name="$(curl -sH Metadata:true --noproxy '*' 'http://169.254.169.254/metadata/instance/compute/name?api-version=2020-09-01&format=text')"
-export local_ipv4="$(curl -sH Metadata:true --noproxy '*' 'http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/privateIpAddress?api-version=2020-09-01&format=text')"
-
 # install package
 
 curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
@@ -42,58 +39,15 @@ chmod 0640 /opt/vault/tls/vault-key.pem
 secret_result=$(~/.local/bin/az keyvault secret show --id "${key_vault_secret_id}" --query "value" --output tsv)
 
 echo $secret_result | base64 -d | openssl pkcs12 -clcerts -nokeys -passin pass: | openssl x509 -out /opt/vault/tls/vault-cert.pem
-
 echo $secret_result | base64 -d | openssl pkcs12 -cacerts -nokeys -chain -passin pass: | openssl x509 -out /opt/vault/tls/vault-ca.pem
-
 echo $secret_result | base64 -d | openssl pkcs12 -nocerts -nodes -passin pass: | openssl pkcs8 -nocrypt -out /opt/vault/tls/vault-key.pem
 
-cat << EOF > /etc/vault.d/vault.hcl
-disable_performance_standby = true
-ui = true
-disable_mlock = true
+echo "${lb_backend_ca_cert}" >> /etc/ssl/certs/ca-certificates.crt
+echo "${lb_private_ip_address} ${leader_tls_servername}" >> /etc/hosts
 
-storage "raft" {
-  path    = "/opt/vault/data"
-  node_id = "$instance_name"
-  retry_join {
-    auto_join = "provider=azure subscription_id=${subscription_id} resource_group=${resource_group_name} vm_scale_set=${vm_scale_set_name}"
-    auto_join_scheme = "https"
-    leader_tls_servername = "${leader_tls_servername}"
-    leader_ca_cert_file = "/opt/vault/tls/vault-ca.pem"
-    leader_client_cert_file = "/opt/vault/tls/vault-cert.pem"
-    leader_client_key_file = "/opt/vault/tls/vault-key.pem"
-  }
-}
-
-cluster_addr = "https://$local_ipv4:8201"
-api_addr = "https://$local_ipv4:8200"
-
-listener "tcp" {
-  address            = "0.0.0.0:8200"
-  tls_disable        = false
-  tls_cert_file      = "/opt/vault/tls/vault-cert.pem"
-  tls_key_file       = "/opt/vault/tls/vault-key.pem"
-  tls_client_ca_file = "/opt/vault/tls/vault-ca.pem"
-}
-
-seal "azurekeyvault" {
-  tenant_id = "${tenant_id}"
-  vault_name = "${key_vault_name}"
-  key_name = "${key_vault_key_name}"
-}
-
-EOF
-
-# vault.hcl should be readable by the vault group only
-chown root:root /etc/vault.d
-chown root:vault /etc/vault.d/vault.hcl
-chmod 640 /etc/vault.d/vault.hcl
-
-systemctl enable vault
-systemctl start vault
-
-echo "Setup Vault profile"
-cat <<EOF > /etc/profile.d/vault.sh
-export VAULT_ADDR="https://127.0.0.1:8200"
+cat << EOH > /etc/profile.d/vault.sh
+export VAULT_ADDR="https://${leader_tls_servername}:8200"
 export VAULT_CACERT="/opt/vault/tls/vault-ca.pem"
-EOF
+export VAULT_CLIENT_CERT="/opt/vault/tls/vault-cert.pem"
+export VAULT_CLIENT_KEY="/opt/vault/tls/vault-key.pem"
+EOH

@@ -12,12 +12,13 @@ This module implements the [Vault with Integrated Storage Reference Architecture
     - Owner role or equivalent is required (to create the Azure role for Vault servers)
 
 - Ensure pre-requisite resources are created:
-    - [Resource Group](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#what-is-a-resource-group)
-        - See this [Resource Group module](https://github.com/hashicorp/terraform-azure-vault-starter/tree/main/examples/resource_group) for an example implementation
+  - This module assumes you have an existing Resource Group containing a Virtual Network and Key Vault with TLS certs for the Vault nodes and load balancer. If you do not, you may use the following [quickstart](https://github.com/hashicorp/terraform-azure-vault-starter/tree/main/examples/prereqs_quickstart) to deploy these resources.
+  - To use existing (non-quickstart) resources, note the following requirements:
     - [Virtual Network Subnets](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) (one for Vault Virtual Machines, and another for an Application Gateway load balancer) and associated [Network Security Groups](https://docs.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview)/[Application Security Group](https://docs.microsoft.com/en-us/azure/virtual-network/application-security-groups)
-        - See this [Virtual Network module](https://github.com/hashicorp/terraform-azure-vault-starter/tree/main/examples/vnet) for an example implementation
-    - [Key Vault](https://azure.microsoft.com/en-us/services/key-vault/) with a [PFX Certificate bundle](https://docs.microsoft.com/en-us/azure/key-vault/certificates/certificate-scenarios)
-        - See this [TLS module](https://github.com/hashicorp/terraform-azure-vault-starter/tree/main/examples/tls) for an example implementation with supporting commands (PowerShell or openssl) to create the certificates
+      - The Virtual Network should be deployed in a location with [Availablity Zones](https://azure.microsoft.com/en-us/global-infrastructure/geographies/)
+      - The Vault VM Virtual Network subnet requires outbound access (necessary for downloading Vault)
+      - The internal load balancer Virtual Network subnet should have external internet traffic blocked via Network Security Group rules
+    - [Key Vault](https://azure.microsoft.com/en-us/services/key-vault/) with a [PFX Certificate bundle](https://docs.microsoft.com/en-us/azure/key-vault/certificates/certificate-scenarios) stored as both a Key Vault Certificate (for the Application Gateway load balancer) and a secret (for the Vault nodes).
 
 - Create a Terraform configuration that pulls in this module and specifies values for the required variables:
 
@@ -35,7 +36,7 @@ provider "azurerm" {
 
 module "vault" {
   source  = "hashicorp/vault-starter/azure"
-  version = "0.1.0"
+  version = "~> 0.1"
 
   # (Required when cert in 'key_vault_vm_tls_secret_id' is signed by a private CA) Certificate authority cert (PEM)
   lb_backend_ca_cert = file("./cacert.pem")
@@ -64,7 +65,6 @@ module "vault" {
 
   # Resource group object in which resources will be deployed
   resource_group = {
-    id       = "/subscriptions/.../resourceGroups/myresourcegroupname"
     location = "eastus"
     name     = "myresourcegroupname"
   }
@@ -72,7 +72,8 @@ module "vault" {
   # Prefix for resource names
   resource_name_prefix = "dev"
 
-  # SSH public key (for authentication to Vault servers)
+  # SSH public key (authentication to Vault servers)
+  # Follow steps on private/public key creation (https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys)
   ssh_public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADA..."
 
   # Application Security Group IDs for Vault VMs
@@ -83,7 +84,7 @@ module "vault" {
 - Run `terraform init` and `terraform apply`
 
 - You must [initialize](https://www.vaultproject.io/docs/commands/operator/init#operator-init) your Vault cluster after you create it. Begin by SSHing into your Vault cluster.
-    - The [example Virtual Network module](https://github.com/hashicorp/terraform-azure-vault-starter/tree/main/examples/vnet) deploys (optionally but enabled by default) the [Azure Bastion Service](https://docs.microsoft.com/en-us/azure/bastion/bastion-overview) to allow this via the Azure Portal.
+    - The [example Virtual Network module](https://github.com/hashicorp/terraform-azure-vault-starter/tree/main/examples/prereqs_quickstart/vnet) deploys (optionally but enabled by default) the [Azure Bastion Service](https://docs.microsoft.com/en-us/azure/bastion/bastion-overview) to allow this via the Azure Portal.
 
 - To initialize the Vault cluster, run the following commands:
 

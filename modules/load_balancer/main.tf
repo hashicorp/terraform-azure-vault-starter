@@ -1,3 +1,10 @@
+/**
+ * Copyright © 2014-2022 HashiCorp, Inc.
+ *
+ * This Source Code is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this project, you can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ */
+
 locals {
   backend_address_pool_name      = "${var.resource_name_prefix}-vault"
   backend_http_setting_name      = "${var.resource_name_prefix}-vault"
@@ -16,6 +23,7 @@ resource "azurerm_public_ip" "vault_lb" {
   resource_group_name = var.resource_group.name
   sku                 = "Standard"
   tags                = var.common_tags
+  zones               = var.zones
 }
 
 resource "azurerm_application_gateway" "vault" {
@@ -46,6 +54,7 @@ resource "azurerm_application_gateway" "vault" {
 
   identity {
     identity_ids = var.identity_ids
+    type         = "UserAssigned"
   }
 
   frontend_port {
@@ -106,6 +115,7 @@ resource "azurerm_application_gateway" "vault" {
     http_listener_name         = local.http_listener_name
     name                       = "${var.resource_name_prefix}-vault"
     rule_type                  = "Basic"
+    priority                   = 1000
   }
 
   ssl_certificate {

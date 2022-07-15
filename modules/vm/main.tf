@@ -1,3 +1,10 @@
+/**
+ * Copyright © 2014-2022 HashiCorp, Inc.
+ *
+ * This Source Code is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this project, you can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ */
+
 resource "azurerm_linux_virtual_machine_scale_set" "vault_cluster" {
   admin_username      = var.ssh_username
   instances           = var.instance_count
@@ -8,13 +15,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "vault_cluster" {
   sku                 = var.instance_type
   source_image_id     = var.user_supplied_source_image_id
   zone_balance        = var.zones == null ? false : true
+  user_data           = var.user_data
   zones               = var.zones
-
-  # user_data = var.user_data
-  # Actual "userData" support is pending in Terraform
-  # https://github.com/terraform-providers/terraform-provider-azurerm/issues/11846
-  # Fine to just use with the legacy custom_data API instead
-  custom_data = var.user_data
 
   additional_capabilities {
     ultra_ssd_enabled = var.ultra_ssd_enabled
